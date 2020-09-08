@@ -20,6 +20,10 @@
 **/.idea/**/*.iml
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
+**/.idea/**/encodings.xml
+**/.idea/**/indexLayout.xml
+**/.idea/**/projectSettingsUpdater.xml
+**/.idea/**/vcs.xml
 
 *.suo
 *.user
