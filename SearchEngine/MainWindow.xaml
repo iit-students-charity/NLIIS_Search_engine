@@ -1,0 +1,40 @@
+﻿<Window x:Class="SearchEngine.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SearchEngine"
+        mc:Ignorable="d"
+        Title="Linear text search engine" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="700" />
+            <ColumnDefinition Width="100" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="400" />
+        </Grid.RowDefinitions>
+        
+        <TextBox 
+            Grid.Row="0" Grid.Column="0" 
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Height="20" Width="670"
+            MaxLines="1" TextWrapping="NoWrap"
+            />
+        <Button 
+            Grid.Row="0" Grid.Column="1"
+            HorizontalAlignment="Left" VerticalAlignment="Center"
+            Content="Find"
+            Height="20" Width="70"
+            />
+            <ListView
+                Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                HorizontalAlignment="Center" VerticalAlignment="Top"
+                Width="770" Height="350">
+                <ListItem Background="Aqua"></ListItem>
+                <ListItem Background="Gray"></ListItem>
+                <ListItem Background="Red"></ListItem>
+            </ListView>
+    </Grid>
+</Window>

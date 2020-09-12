@@ -2,7 +2,7 @@
 
 namespace Services
 {
-    public class VectorSearchService
+    public class LinearSearchService
     {
     }
 }

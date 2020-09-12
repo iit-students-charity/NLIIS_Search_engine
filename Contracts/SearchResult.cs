@@ -2,7 +2,7 @@
 
 namespace Contracts
 {
-    public class TextSearchResult
+    public class SearchResult
     {
         public IDocument Document { get; set; }
         public TimeSpan ElapsedTime { get; set; }
