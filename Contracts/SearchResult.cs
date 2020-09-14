@@ -2,10 +2,9 @@
 
 namespace Contracts
 {
-    public class SearchResult
+    public class SearchResult : ISearchResult
     {
-        public IDocument Document { get; set; }
-        public TimeSpan ElapsedTime { get; set; }
-        public uint Occurrences { get; set; }
+        public IDocument Match { get; set; }
+        public int Occurrences { get; set; }
     }
 }
