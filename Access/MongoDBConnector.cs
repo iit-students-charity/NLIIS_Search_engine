@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Contracts;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -13,7 +12,7 @@ namespace Access
 
         public static void CreateSession(string db)
         {
-            var connectionString = $@"mongodb://lcoalhost:27017/{db}?safe=true";
+            var connectionString = $@"mongodb://localhost:27017/{db}?safe=true";
             _mongoClient = new MongoClient(connectionString);
             
             _database = _mongoClient.GetDatabase(db);
@@ -33,9 +32,9 @@ namespace Access
             _database.GetCollection<T>(nameof(T)).DeleteOne(document => document.Id == documentId);
         }
 
-        public static IQueryable<T> GetAll<T>()
+        public static IQueryable<T> GetAll<T>(string collectionName = null)
         {
-            return _database.GetCollection<T>(nameof(T)).AsQueryable();
+            return _database.GetCollection<T>(collectionName ?? nameof(T)).AsQueryable();
         }
     }
 }

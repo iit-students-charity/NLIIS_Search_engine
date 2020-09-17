@@ -4,7 +4,7 @@ namespace Contracts
 {
     public class SearchResult : ISearchResult
     {
-        public IDocument Match { get; set; }
+        public TextDocument Match { get; set; }
         public int Occurrences { get; set; }
     }
 }

@@ -18,13 +18,13 @@ namespace Services
         
         public IEnumerable<SearchResult> Find(string text)
         {
-            var foundDocs = MongoDBConnector.GetAll<TextDocument>()
+            var foundDocs = MongoDBConnector.GetAll<TextDocument>("text_documents")
                 .Select(document => new SearchResult
                 {
                     Match = document,
                     Occurrences = Regex.Matches(document.Text, text).Count,
                 })
-                .AsEnumerable();
+                .ToList();
 
             return foundDocs;
         }
