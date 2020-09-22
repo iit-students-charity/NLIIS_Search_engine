@@ -33,7 +33,12 @@
             Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
             Width="755" Height="350"
-            Name="FoundDocumentsList">
+            Name="ListView_FoundDocuments">
         </ListView>
+        <Label
+            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+            HorizontalAlignment="Center"
+            Name="Label_NoFoundDocuments" Content="Start searching!">
+        </Label>
     </Grid>
 </Window>
