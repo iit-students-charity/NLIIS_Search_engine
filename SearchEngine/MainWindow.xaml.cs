@@ -36,8 +36,10 @@ namespace SearchEngine
                     .Find(TextBox_Search.Text)?
                     .Select(result => new ListViewItem
                     {
-                        Content = result.Match.Title + " - " + result.Match.Text,
-                        FontStyle = FontStyles.Italic
+                        Content = 
+                            result.Match.Id.ToString().Substring(0, 10) + "...\t| " 
+                            + result.Match.CreatedAt.ToString("dd/MM/yyyy") + " | "
+                            + result.Match.Title,
                     });
                 ListView_FoundDocuments.Visibility = ListView_FoundDocuments.ItemsSource == null
                     ? Visibility.Hidden
