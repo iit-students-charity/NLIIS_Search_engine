@@ -12,7 +12,8 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />
-            <RowDefinition Height="400" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="370" />
         </Grid.RowDefinitions>
         
         <TextBox 
@@ -29,16 +30,21 @@
             Height="20" Width="70"
             Name="Button_Find" Click="FindDocuments"
             />
-        <ListView
-            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
-            Width="755" Height="350"
-            Name="ListView_FoundDocuments">
-        </ListView>
         <Label
             Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
             HorizontalAlignment="Center"
             Name="Label_NoFoundDocuments" Content="Start searching!">
         </Label>
+        <Label 
+            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
+            Name="Label_TableHeader" Content="ID                           Date                      Occurrences          Title">
+        </Label>
+        <ListView
+            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
+            Width="755" Height="320"
+            Name="ListView_FoundDocuments">
+        </ListView>
     </Grid>
 </Window>

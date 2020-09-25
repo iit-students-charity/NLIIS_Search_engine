@@ -17,6 +17,7 @@ namespace SearchEngine
             InitializeComponent();
 
             ListView_FoundDocuments.Visibility = Visibility.Hidden;
+            Label_TableHeader.Visibility = Visibility.Hidden;
             ListView_FoundDocuments.ItemsSource = null;
         }
         
@@ -37,9 +38,12 @@ namespace SearchEngine
                     .Select(result => new ListViewItem
                     {
                         Content = 
-                            result.Match.Id.ToString().Substring(0, 10) + "...\t| " 
-                            + result.Match.CreatedAt.ToString("dd/MM/yyyy") + " | "
-                            + result.Match.Title,
+                            result.Match.Id.ToString().Substring(0, 11) + "...\t " +
+                            result.Match.CreatedAt.ToString("dd/MM/yyyy") + "\t " +
+                            result.Occurrences + "\t\t " +
+                            (result.Match.Title.Length > 20
+                                ? result.Match.Title.Substring(0, 20) + "..."
+                                : result.Match.Title),
                     });
                 ListView_FoundDocuments.Visibility = ListView_FoundDocuments.ItemsSource == null
                     ? Visibility.Hidden
@@ -47,6 +51,7 @@ namespace SearchEngine
                 Label_NoFoundDocuments.Visibility = ListView_FoundDocuments.Visibility == Visibility.Visible
                     ? Visibility.Hidden
                     : Visibility.Visible;
+                Label_TableHeader.Visibility = ListView_FoundDocuments.Visibility;
             }
         } 
     }
