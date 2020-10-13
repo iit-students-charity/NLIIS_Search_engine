@@ -20,7 +20,8 @@ namespace Services
             
             foreach (var document in MongoDBConnector.GetAll<TextDocument>("text_documents"))
             {
-                var matches = Regex.Matches(document.Text, String.Join("|", searchStrings));
+                var pattern = String.Join("|", searchStrings);
+                var matches = Regex.Matches(document.Text, pattern, RegexOptions.Compiled);
 
                 if (matches.Count > 0)
                 {

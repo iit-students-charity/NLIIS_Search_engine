@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using Services;
 
 namespace SearchEngine
@@ -35,20 +36,24 @@ namespace SearchEngine
             }
             else
             {
-                var searchStrings = FormQuery(TextBox_Search.Text);
+                var searchStringsSequences = FormQuery(TextBox_Search.Text);
+
+                foreach (var searchStrings in searchStringsSequences)
+                {
+                    ListView_FoundDocuments.ItemsSource = _searchService
+                        .Find(searchStrings)?
+                        .Select(result => new ListViewItem
+                        {
+                            Content = 
+                                result.Match.Id.ToString().Substring(0, 11) + "...\t " +
+                                result.Match.CreatedAt.ToString("dd/MM/yyyy") + "\t " +
+                                result.Occurrences + "\t\t " +
+                                (result.Match.Title.Length > 20
+                                    ? result.Match.Title.Substring(0, 20) + "..."
+                                    : result.Match.Title),
+                        });    
+                }
                 
-                ListView_FoundDocuments.ItemsSource = _searchService
-                    .Find(searchStrings)?
-                    .Select(result => new ListViewItem
-                    {
-                        Content = 
-                            result.Match.Id.ToString().Substring(0, 11) + "...\t " +
-                            result.Match.CreatedAt.ToString("dd/MM/yyyy") + "\t " +
-                            result.Occurrences + "\t\t " +
-                            (result.Match.Title.Length > 20
-                                ? result.Match.Title.Substring(0, 20) + "..."
-                                : result.Match.Title),
-                    });
                 ListView_FoundDocuments.Visibility = ListView_FoundDocuments.ItemsSource == null
                     ? Visibility.Hidden
                     : Visibility.Visible;
@@ -59,17 +64,19 @@ namespace SearchEngine
             }
         }
 
-        private IEnumerable<string> FormQuery(string query)
+        private IEnumerable<IEnumerable<string>> FormQuery(string query)
         {
-            var searchStrings = new List<string>();
+            var searchStrings = new List<List<string>>();
             var atoms = GetAtoms(query);
             var valueSets = GetValueSets(atoms);
             var positiveResultValueSets = GetPositiveResultValueSets(valueSets, query, atoms);
 
             foreach (var setNumber in positiveResultValueSets)
             {
-                searchStrings.AddRange(atoms.Where(
-                    (atom, index) => valueSets.ElementAt(setNumber).ElementAt(index)));
+                searchStrings.Add(
+                    atoms
+                        .Where((atom, index) => valueSets.ElementAt(setNumber).ElementAt(index) == "1")
+                        .ToList());
             }
             
             return searchStrings;
@@ -116,7 +123,7 @@ namespace SearchEngine
         }
 
         private IEnumerable<int> GetPositiveResultValueSets(
-            IEnumerable<IEnumerable<bool>> sets,
+            IEnumerable<IEnumerable<string>> sets,
             string query,
             IEnumerable<string> atoms)
         {
@@ -129,12 +136,12 @@ namespace SearchEngine
                 for (var atomIndex = 0; atomIndex < atoms.Count(); atomIndex++)
                 {
                     var regex = new Regex(atoms.ElementAt(atomIndex), RegexOptions.Compiled);
-                    regex.Replace(queryWithValues, sets.ElementAt(valueSetNumber).ElementAt(atomIndex) ? "1" : "0");
+                    queryWithValues = regex.Replace(queryWithValues, sets.ElementAt(valueSetNumber).ElementAt(atomIndex));
                 }
 
                 var queryResult = CalculateBooleanQueryResult(queryWithValues);
 
-                if (queryResult)
+                if (queryResult == "1")
                 {
                     positiveResultValueSets.Add(valueSetNumber);
                 }
@@ -146,45 +153,44 @@ namespace SearchEngine
         private ISet<string> GetAtoms(string query)
         {
             var strings = query
-                .Split('!', '&', '|')
-                .Where(atom => !atom.Equals(string.Empty))
-                .Select(atom => atom.StartsWith("\"") ? atom : atom.Trim());
+                .Split('!', '&', '|', ')', '(')
+                .Select(atom => atom.StartsWith("\"") ? atom : atom.Trim())
+                .Where(atom => !atom.Equals(string.Empty));
             var atoms = new HashSet<string>(strings);
 
             return atoms;
         }
 
-        private IEnumerable<IEnumerable<bool>> GetValueSets(IEnumerable<string> atoms)
+        private IEnumerable<IEnumerable<string>> GetValueSets(IEnumerable<string> atoms)
         {
-            var sets = new List<List<bool>>();
+            var sets = new List<List<string>>();
 
             for (var row = 0; row < Math.Pow(2, atoms.Count()); row++)
             {
-                var newSet = new List<bool>();
-                sets.Add(newSet);
-                var binaryNumber = Convert.ToString(row, 2)
-                    .Split(string.Empty)
-                    .Where(digit => !digit.Equals(string.Empty))
-                    .Select(digit => digit.Equals("1"));
+                var newSet = new List<string>();
+                var binaryNumber = Convert.ToString(row, 2).ToCharArray();
 
-                if (binaryNumber.Count() < atoms.Count())
+                if (binaryNumber.Length < atoms.Count())
                 {
                     var zerosToAdd = atoms.Count() - binaryNumber.Count();
 
                     for (var zeroIndex = 0; zeroIndex < zerosToAdd; zeroIndex++)
                     {
-                        newSet.Add(false);
+                        newSet.Add("0");
                     }
                 }
                 
-                newSet.AddRange(binaryNumber);
+                newSet.AddRange(binaryNumber.Select(digit => digit.ToString()));
+                sets.Add(newSet);
             }
 
             return sets;
         }
 
-        private bool CalculateBooleanQueryResult(string queryWithValues)
+        private string CalculateBooleanQueryResult(string queryWithValues)
         {
+            queryWithValues = PrepareQueryToCalculation(queryWithValues);
+            
             while (Regex.Match(queryWithValues, "[!|&~]|->").Length != 0) {
                 queryWithValues = Regex.Replace(queryWithValues, @"\(?!0\)?", "1");
                 queryWithValues = Regex.Replace(queryWithValues, @"\(?!1\)?", "0");
@@ -202,7 +208,15 @@ namespace SearchEngine
                 queryWithValues = Regex.Replace(queryWithValues, @"\(([10])~[10]\)", "0");
             }
 
-            return queryWithValues.Equals("1");
+            return queryWithValues;
+        }
+
+        private string PrepareQueryToCalculation(string queryWithValues)
+        {
+            return queryWithValues
+                .Insert(queryWithValues.Length, ")")
+                .Insert(0 , "(")
+                .Replace(" ", string.Empty);
         }
     }
 }
