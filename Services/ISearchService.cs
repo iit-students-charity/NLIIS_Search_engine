@@ -5,6 +5,6 @@ namespace Services
 {
     public interface ISearchService
     {
-        IEnumerable<SearchResult> Find(string text);
+        IEnumerable<SearchResult> Find(IEnumerable<string> searchStrings);
     }
 }

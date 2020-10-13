@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Access;
@@ -13,13 +14,13 @@ namespace Services
             MongoDBConnector.CreateSession("nliis");
         }
         
-        public IEnumerable<SearchResult> Find(string text)
+        public IEnumerable<SearchResult> Find(IEnumerable<string> searchStrings)
         {
             var foundDocs = new List<SearchResult>();
             
             foreach (var document in MongoDBConnector.GetAll<TextDocument>("text_documents"))
             {
-                var matches = Regex.Matches(document.Text, text);
+                var matches = Regex.Matches(document.Text, String.Join("|", searchStrings));
 
                 if (matches.Count > 0)
                 {
