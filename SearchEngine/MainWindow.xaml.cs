@@ -36,6 +36,17 @@ namespace SearchEngine
             }
             else
             {
+                var query = TextBox_Search.Text;
+                
+                if (!IsQueryValid(query))
+                {
+                    Label_NoFoundDocuments.Content = "Enter a valid query";
+                    ListView_FoundDocuments.Visibility = Visibility.Hidden;
+                    Label_TableHeader.Visibility = ListView_FoundDocuments.Visibility;
+
+                    return;
+                }
+                
                 var searchStringsSequences = FormQuery(TextBox_Search.Text);
 
                 foreach (var searchStrings in searchStringsSequences)
@@ -74,9 +85,9 @@ namespace SearchEngine
             foreach (var setNumber in positiveResultValueSets)
             {
                 searchStrings.Add(
-                    atoms
-                        .Where((atom, index) => valueSets.ElementAt(setNumber).ElementAt(index) == "1")
-                        .ToList());
+                atoms
+                    .Where((atom, index) => valueSets.ElementAt(setNumber).ElementAt(index) == "1")
+                    .ToList());
             }
             
             return searchStrings;
@@ -84,12 +95,12 @@ namespace SearchEngine
 
         private bool IsQueryValid(string query)
         {
-            if (!(Regex.Match(query, @"([|&~]|->)", RegexOptions.Compiled).Length != 0 ||
+            if (!(Regex.Match(query, @"^[|&]$", RegexOptions.Compiled).Length != 0 ||
                 (Regex.Match(query, @"\)\(", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"[A-Z01]([^|&~]|(?!->))[A-Z01]", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"[^(]![A-Z01]", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"![A-Z01][^)]", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"\([A-Z01]\)", RegexOptions.Compiled).Length == 0)))
+                 Regex.Match(query, @"[^|&]+\s+[^|&]\s+[^|&]+", RegexOptions.Compiled).Length == 0 &&
+                 Regex.Match(query, @"[^(]\s*![^|&]+", RegexOptions.Compiled).Length == 0 &&
+                 Regex.Match(query, @"![^|&]+\s*[^)]", RegexOptions.Compiled).Length == 0 &&
+                 Regex.Match(query, @"\(\s*[^|&]+\s*\)", RegexOptions.Compiled).Length == 0)))
             {
                 return false;
             }
@@ -102,16 +113,16 @@ namespace SearchEngine
                 return false;
             }
             
-            var queryCopy = new string(query);
+            var queryCopy = new string(query).Insert(query.Length, ")").Insert(0, "(");
             var replacement = "A";
 
-            while (Regex.Match(queryCopy, @"([|&~]|->)", RegexOptions.Compiled).Length != 0 ||
+            while (Regex.Match(queryCopy, @"[|&~]", RegexOptions.Compiled).Length != 0 ||
                    Regex.Match(queryCopy, @"^[" + replacement + "()]+$", RegexOptions.Compiled).Length == 0)
             {
                 var previousCopy = new string(queryCopy);
 
-                queryCopy = Regex.Replace(queryCopy, @"\(![A-Z01]\)", replacement);
-                queryCopy = Regex.Replace(queryCopy, @"\([A-Z01]([|&~]|->)[A-Z01]\)", replacement);
+                queryCopy = Regex.Replace(queryCopy, @"\(\s*!?[^|&]+\s*\)", replacement);
+                queryCopy = Regex.Replace(queryCopy, @"\(\s*[^|&()]+\s+[|&]\s+[^|&()]+\s*\)", replacement);
 
                 if (queryCopy.Equals(previousCopy))
                 {
@@ -208,7 +219,9 @@ namespace SearchEngine
                 queryWithValues = Regex.Replace(queryWithValues, @"\(([10])~[10]\)", "0");
             }
 
-            return queryWithValues;
+            return queryWithValues
+                .Replace("(", string.Empty)
+                .Replace(")", string.Empty);
         }
 
         private string PrepareQueryToCalculation(string queryWithValues)

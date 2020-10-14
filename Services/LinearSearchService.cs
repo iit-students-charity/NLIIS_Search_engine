@@ -20,15 +20,16 @@ namespace Services
             
             foreach (var document in MongoDBConnector.GetAll<TextDocument>("text_documents"))
             {
-                var pattern = String.Join("|", searchStrings);
-                var matches = Regex.Matches(document.Text, pattern, RegexOptions.Compiled);
+                var matches = searchStrings
+                    .Select(searchString => Regex.Matches(document.Text, searchString, RegexOptions.Compiled))
+                    .ToList();
 
-                if (matches.Count > 0)
+                if (matches.All(match => match.Count > 0))
                 {
                     foundDocs.Add(new SearchResult
                     {
                         Match = document,
-                        Occurrences = matches.Count,
+                        Occurrences = matches.Sum(match => match.Count),
                     });
                 }
             }
