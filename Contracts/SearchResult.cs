@@ -6,5 +6,6 @@ namespace Contracts
     {
         public TextDocument Match { get; set; }
         public int Occurrences { get; set; }
+        public string SearchedWords { get; set; }
     }
 }

@@ -21,7 +21,12 @@ namespace Services
             foreach (var document in MongoDBConnector.GetAll<TextDocument>("text_documents"))
             {
                 var matches = searchStrings
-                    .Select(searchString => Regex.Matches(document.Text, searchString, RegexOptions.Compiled))
+                    .Select(searchString => Regex.Matches(
+                        document.Text,
+                        searchString.StartsWith("\"")
+                            ? searchString.Replace("\"", string.Empty)
+                            : searchString,
+                        RegexOptions.Compiled))
                     .ToList();
 
                 if (matches.All(match => match.Count > 0))
@@ -30,6 +35,7 @@ namespace Services
                     {
                         Match = document,
                         Occurrences = matches.Sum(match => match.Count),
+                        SearchedWords = String.Join(" • ", searchStrings)
                     });
                 }
             }

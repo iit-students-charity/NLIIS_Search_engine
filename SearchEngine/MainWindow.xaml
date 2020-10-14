@@ -38,7 +38,7 @@
         <Label 
             Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
-            Name="Label_TableHeader" Content="ID                           Date                      Occurrences          Title">
+            Name="Label_TableHeader" Content="ID                                                        Date                      Occurrences          Title">
         </Label>
         <ListView
             Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"

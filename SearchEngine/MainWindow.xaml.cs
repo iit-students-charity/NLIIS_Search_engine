@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using Contracts;
 using Services;
 
 namespace SearchEngine
@@ -41,6 +42,7 @@ namespace SearchEngine
                 if (!IsQueryValid(query))
                 {
                     Label_NoFoundDocuments.Content = "Enter a valid query";
+                    Label_NoFoundDocuments.Visibility = Visibility.Visible;
                     ListView_FoundDocuments.Visibility = Visibility.Hidden;
                     Label_TableHeader.Visibility = ListView_FoundDocuments.Visibility;
 
@@ -48,23 +50,31 @@ namespace SearchEngine
                 }
                 
                 var searchStringsSequences = FormQuery(TextBox_Search.Text);
+                var items = new List<ListViewItem>();
 
                 foreach (var searchStrings in searchStringsSequences)
                 {
-                    ListView_FoundDocuments.ItemsSource = _searchService
-                        .Find(searchStrings)?
-                        .Select(result => new ListViewItem
+                    var found = _searchService.Find(searchStrings);
+
+                    if (found != null)
+                    {
+                        items.Add(new ListViewItem()
+                        {
+                            Content = "\n" + String.Join(" • ", searchStrings) + "\n",
+                        });
+                    
+                        items.AddRange(found.Select(result => new ListViewItem
                         {
                             Content = 
-                                result.Match.Id.ToString().Substring(0, 11) + "...\t " +
+                                result.Match.Id + "\t " +
                                 result.Match.CreatedAt.ToString("dd/MM/yyyy") + "\t " +
                                 result.Occurrences + "\t\t " +
-                                (result.Match.Title.Length > 20
-                                    ? result.Match.Title.Substring(0, 20) + "..."
-                                    : result.Match.Title),
-                        });    
+                                result.Match.Title,
+                        }));
+                    }
                 }
-                
+
+                ListView_FoundDocuments.ItemsSource = items.Any() ? items : null;
                 ListView_FoundDocuments.Visibility = ListView_FoundDocuments.ItemsSource == null
                     ? Visibility.Hidden
                     : Visibility.Visible;
@@ -77,31 +87,32 @@ namespace SearchEngine
 
         private IEnumerable<IEnumerable<string>> FormQuery(string query)
         {
-            var searchStrings = new List<List<string>>();
             var atoms = GetAtoms(query);
             var valueSets = GetValueSets(atoms);
             var positiveResultValueSets = GetPositiveResultValueSets(valueSets, query, atoms);
 
-            foreach (var setNumber in positiveResultValueSets)
-            {
-                searchStrings.Add(
-                atoms
-                    .Where((atom, index) => valueSets.ElementAt(setNumber).ElementAt(index) == "1")
-                    .ToList());
-            }
-            
-            return searchStrings;
+            return positiveResultValueSets
+                .Select(setNumber => 
+                    atoms.Where((atom, index) => valueSets.ElementAt(setNumber).ElementAt(index) == "1").ToList())
+                .ToList();
         }
 
         private bool IsQueryValid(string query)
         {
-            if (!(Regex.Match(query, @"^[|&]$", RegexOptions.Compiled).Length != 0 ||
-                (Regex.Match(query, @"\)\(", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"[^|&]+\s+[^|&]\s+[^|&]+", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"[^(]\s*![^|&]+", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"![^|&]+\s*[^)]", RegexOptions.Compiled).Length == 0 &&
-                 Regex.Match(query, @"\(\s*[^|&]+\s*\)", RegexOptions.Compiled).Length == 0)))
+            var quotesReplace = new Regex("\"[^\"]+\"", RegexOptions.Compiled);
+            query = quotesReplace.Replace(query, "QUOTES");
+            
+            static bool IsQueryInvalidGeneral(string queryToValidate) =>
+                !(Regex.Match(queryToValidate, @"^[|&]+$", RegexOptions.Compiled).Length != 0 ||
+                  (Regex.Match(queryToValidate, @"\)\(", RegexOptions.Compiled).Length == 0 &&
+                   Regex.Match(queryToValidate, @"[^|&]+\s+[^|&]\s+[^|&]+", RegexOptions.Compiled).Length == 0 &&
+                   Regex.Match(queryToValidate, @"[^(]\s*![^|&]+", RegexOptions.Compiled).Length == 0 &&
+                   Regex.Match(queryToValidate, @"![^|&]+\s*[^)]", RegexOptions.Compiled).Length == 0 &&
+                   Regex.Match(queryToValidate, @"\(\s*[^|&]+\s*\)", RegexOptions.Compiled).Length == 0));
+            
+            if (IsQueryInvalidGeneral(query))
             {
+                
                 return false;
             }
             
@@ -114,7 +125,7 @@ namespace SearchEngine
             }
             
             var queryCopy = new string(query).Insert(query.Length, ")").Insert(0, "(");
-            var replacement = "A";
+            var replacement = "•";
 
             while (Regex.Match(queryCopy, @"[|&~]", RegexOptions.Compiled).Length != 0 ||
                    Regex.Match(queryCopy, @"^[" + replacement + "()]+$", RegexOptions.Compiled).Length == 0)
@@ -165,7 +176,7 @@ namespace SearchEngine
         {
             var strings = query
                 .Split('!', '&', '|', ')', '(')
-                .Select(atom => atom.StartsWith("\"") ? atom : atom.Trim())
+                .Select(atom => atom.Trim())
                 .Where(atom => !atom.Equals(string.Empty));
             var atoms = new HashSet<string>(strings);
 
