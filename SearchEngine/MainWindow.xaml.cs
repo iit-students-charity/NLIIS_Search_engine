@@ -27,13 +27,13 @@ namespace SearchEngine
         
         private void FindDocuments(object sender, RoutedEventArgs e)
         {
-            Label_NoFoundDocuments.Content = "No documents found";
+            Label_Information.Content = "No documents found";
             
             if (string.IsNullOrEmpty(TextBox_Search.Text))
             {
                 ListView_FoundDocuments.ItemsSource = null;
                 ListView_FoundDocuments.Visibility = Visibility.Hidden;
-                Label_NoFoundDocuments.Visibility = Visibility.Visible;
+                Label_Information.Visibility = Visibility.Visible;
             }
             else
             {
@@ -41,8 +41,8 @@ namespace SearchEngine
                 
                 if (!IsQueryValid(query))
                 {
-                    Label_NoFoundDocuments.Content = "Enter a valid query";
-                    Label_NoFoundDocuments.Visibility = Visibility.Visible;
+                    Label_Information.Content = "Enter a valid query";
+                    Label_Information.Visibility = Visibility.Visible;
                     ListView_FoundDocuments.Visibility = Visibility.Hidden;
                     Label_TableHeader.Visibility = ListView_FoundDocuments.Visibility;
 
@@ -56,14 +56,19 @@ namespace SearchEngine
                 {
                     var found = _searchService.Find(searchStrings);
 
-                    if (found != null)
+                    if (found == null)
                     {
-                        items.Add(new ListViewItem()
-                        {
-                            Content = "\n" + String.Join(" • ", searchStrings) + "\n",
-                        });
+                        continue;
+                    }
+
+                    items.Add(new ListViewItem
+                    {
+                        Content = "\n" + String.Join(" • ", searchStrings) + "\n",
+                    });
                     
-                        items.AddRange(found.Select(result => new ListViewItem
+                    items.AddRange(found
+                        .OrderByDescending(d => d.Occurrences)
+                        .Select(result => new ListViewItem
                         {
                             Content = 
                                 result.Match.Id + "\t " +
@@ -71,20 +76,36 @@ namespace SearchEngine
                                 result.Occurrences + "\t\t " +
                                 result.Match.Title,
                         }));
-                    }
                 }
 
                 ListView_FoundDocuments.ItemsSource = items.Any() ? items : null;
                 ListView_FoundDocuments.Visibility = ListView_FoundDocuments.ItemsSource == null
                     ? Visibility.Hidden
                     : Visibility.Visible;
-                Label_NoFoundDocuments.Visibility = ListView_FoundDocuments.Visibility == Visibility.Visible
+                Label_Information.Visibility = ListView_FoundDocuments.Visibility == Visibility.Visible
                     ? Visibility.Hidden
                     : Visibility.Visible;
                 Label_TableHeader.Visibility = ListView_FoundDocuments.Visibility;
             }
         }
-
+        
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(
+                "Type words in search box, then press Search\n" +
+                "button to find proper documents.\n" +
+                "Boolean operators can be used: &, |, and brackets. Example query:\n" +
+                @"we | (are & ""the champions"")",
+                "Help");
+        }
+        
+        private void Authors_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(
+                "Group 721701:\nSemenikhin Nirita,\nStryzhych Angelika",
+                "Authors");
+        }
+        
         private IEnumerable<IEnumerable<string>> FormQuery(string query)
         {
             var atoms = GetAtoms(query);
@@ -102,17 +123,23 @@ namespace SearchEngine
             var quotesReplace = new Regex("\"[^\"]+\"", RegexOptions.Compiled);
             query = quotesReplace.Replace(query, "QUOTES");
             
-            static bool IsQueryInvalidGeneral(string queryToValidate) =>
-                !(Regex.Match(queryToValidate, @"^[|&]+$", RegexOptions.Compiled).Length != 0 ||
-                  (Regex.Match(queryToValidate, @"\)\(", RegexOptions.Compiled).Length == 0 &&
-                   Regex.Match(queryToValidate, @"[^|&]+\s+[^|&]\s+[^|&]+", RegexOptions.Compiled).Length == 0 &&
-                   Regex.Match(queryToValidate, @"[^(]\s*![^|&]+", RegexOptions.Compiled).Length == 0 &&
-                   Regex.Match(queryToValidate, @"![^|&]+\s*[^)]", RegexOptions.Compiled).Length == 0 &&
-                   Regex.Match(queryToValidate, @"\(\s*[^|&]+\s*\)", RegexOptions.Compiled).Length == 0));
-            
-            if (IsQueryInvalidGeneral(query))
+            static bool IsQueryValidGeneral(string queryToValidate)
             {
+                var onlyOperators = Regex.Match(queryToValidate, @"^[!|&]+$", RegexOptions.Compiled).Length != 0;
+                var flippedBraces = Regex.Match(queryToValidate, @"\)\(", RegexOptions.Compiled).Length != 0;
+                var moreThanTwoOperandsWithoutBraces = Regex.Match(queryToValidate, @"[^!|&]+\s+[^!|&]\s+[^!|&]+", RegexOptions.Compiled).Length != 0;
+                var noBraceBeforeNegation = Regex.Match(queryToValidate, @"[^(]\s*!", RegexOptions.Compiled).Length != 0;
+                var atomInBraces = Regex.Match(queryToValidate, @"\(\s*[^!|&]+\s*\)", RegexOptions.Compiled).Length != 0;
                 
+                return !(onlyOperators ||
+                         flippedBraces ||
+                         moreThanTwoOperandsWithoutBraces ||
+                         noBraceBeforeNegation ||
+                         atomInBraces);
+            }
+
+            if (!IsQueryValidGeneral(query))
+            {
                 return false;
             }
             
@@ -222,12 +249,6 @@ namespace SearchEngine
         
                 queryWithValues = Regex.Replace(queryWithValues, @"(\([10]\&0\))|(\(0\&[10]\))", "0");
                 queryWithValues = Regex.Replace(queryWithValues, @"(\(1\&1\))", "1");
-
-                queryWithValues = Regex.Replace(queryWithValues, @"\(1->0\)", "0");
-                queryWithValues = Regex.Replace(queryWithValues, @"\([10]->[10]\)", "1");
-        
-                queryWithValues = Regex.Replace(queryWithValues, @"\(0~0\)|\(1~1\)", "1");
-                queryWithValues = Regex.Replace(queryWithValues, @"\(([10])~[10]\)", "0");
             }
 
             return queryWithValues

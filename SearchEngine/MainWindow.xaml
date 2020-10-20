@@ -4,44 +4,52 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Linear text search engine" Height="450" Width="800">
+        Title="Linear text search engine" Height="470" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="700" />
             <ColumnDefinition Width="100" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
             <RowDefinition Height="50" />
             <RowDefinition Height="30" />
             <RowDefinition Height="370" />
         </Grid.RowDefinitions>
         
+        <Menu Grid.ColumnSpan="2" Height="20">
+            <MenuItem Header="About">
+                <MenuItem Header="Help" Click="Help_Click"></MenuItem>
+                <MenuItem Header="Authors" Click="Authors_Click"></MenuItem>
+            </MenuItem>
+        </Menu>
+        
         <TextBox 
-            Grid.Row="0" Grid.Column="0" 
+            Grid.Row="1" Grid.Column="0" 
             HorizontalAlignment="Center" VerticalAlignment="Center"
             Height="20" Width="670"
             MaxLines="1" TextWrapping="NoWrap"
             Name="TextBox_Search"
             />
         <Button 
-            Grid.Row="0" Grid.Column="1"
+            Grid.Row="1" Grid.Column="1"
             HorizontalAlignment="Left" VerticalAlignment="Center"
             Content="Find"
             Height="20" Width="70"
             Name="Button_Find" Click="FindDocuments"
             />
         <Label
-            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
             HorizontalAlignment="Center"
-            Name="Label_NoFoundDocuments" Content="Start searching!">
+            Name="Label_Information" Content="Start searching!">
         </Label>
         <Label 
-            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
             Name="Label_TableHeader" Content="ID                                                        Date                      Occurrences          Title">
         </Label>
         <ListView
-            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+            Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="15,0,0,0"
             Width="755" Height="320"
             Name="ListView_FoundDocuments">
